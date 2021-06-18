@@ -1,0 +1,301 @@
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/0.71/jquery.csv-0.71.min.js"></script>
+  <script src="js/jquery.base64.min.js"></script>
+  <title>Nature's Retail Order Form</title>
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">  
+</head>
+<body>
+  <div class="container">
+    <h4 style="margin-bottom:1vh">Nature's Essence <strong>Retail</strong> Order Form for <strong>SSMA</strong></h3>
+	<label for="PartyName" style="margin-top:1vh;margin-bottom:1vh">Party Name</label>
+	<input type="text" style="margin-top:1vh;margin-bottom:1vh" id = "PartyName" required>
+	<label for="Town" style= "margin-left:10%; margin-top:1vh;margin-bottom:1vh">Town</label>
+	<input type="text" id = "Town" style="margin-top:1vh;margin-bottom:1vh" required> 
+	<p style="color: rgb(255,0,0)"><strong>*Note: Enter quantity as per box packing.</strong></p>
+	<div id="header"></div>
+	<div class="well">
+		<div class="row" id="csv-display" style="height:60vh;overflow: scroll;">
+		</div>
+	</div>
+	<label for="twoGst">Amount(without GST)</label>
+	<input type="number" id = "twoGst" value=0 readonly>
+	<label for="taGst" style= "margin-left:10%">Amount(with GST)</label>
+	<input type="number" id = "taGst" value=0 readonly>
+
+	<div class="col-sm-10" style="margin:20px 0px 20px 0px;">
+		<a class="btn btn-default read-more" style="background:#3399ff;color:white" id="btnExport">Submit Order</a>
+	</div>
+  </div>
+</body>
+</html>
+<script type="text/javascript">
+  $(document).ready(function(){
+	var data;
+	$.ajax({
+	  type: "GET",  
+	  url: "Retail.csv",
+	  dataType: "text",       
+	  success: function(response)  
+	  {
+		data = $.csv.toArrays(response);
+		generateHtmlTable(data);
+	  }   
+	});
+	function generateHtmlTable(data) {
+		var html = '<table  class="table table-condensed table-hover table-striped" id="orderForm">';
+
+      if(typeof(data[0]) === 'undefined') {
+        return null;
+      } else {
+		$.each(data, function( index, row ) {
+		  //bind header
+		  var rowindex = index;
+		  if(index == 0) {
+			html += '<thead>';
+			html += '<tr>';
+			$.each(row, function( index, colData ) {
+				html += '<th>';
+				html += colData;
+				html += '</th>';
+			});
+			html += '</tr>';
+			html += '</thead>';
+			html += '<tbody>';
+		  } else {
+			html += '<tr>';
+			$.each(row, function( index, colData ) {
+				var idp = "rowip_"+rowindex;
+				var odp = "rowop_"+rowindex;
+				if(index==3){
+					html += '<td>';
+					html += '<input type="number" min="0" max="100000" id="'+idp+'" value="0" maxlength="6" oninput=" javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);calculateRow('+rowindex+')">';
+					html += '</td>';
+				}
+				else if(index == 8){
+					html += '<td>';
+					html += '<input type="number" min="0" max="10000000" id="'+odp+'" value="0" readonly>';
+					html += '</td>';
+				}
+				else{
+					html += '<td id="rd_'+rowindex+'_'+index+'" class="ExportLabelTD">';
+					html += colData;
+					html += '</td>';
+				}
+			});
+			html += '</tr>';
+		  }
+		});
+		html += '</tbody>';
+		html += '<tfoot style="width: 100%; display:none;">';
+		html += '<tr>'
+		html += '<td colspan="8" style="text-align:center">Amount Without GST</td>';
+		html += '<td class="ExportValueTD"><input type="number" min="0" max="10000000" value="0" id="woGst"/></td></tr>'
+		html += '<tr>'
+		html += '<td colspan="8">Amount With GST</td>';
+		html += '<td class="ExportValueTD"><input type="number" min="0" max="10000000" value="0" id="aGst"/></td></tr></tfoot>'
+		html += '</table>';
+		
+		$('#csv-display').append(html);
+	  }
+	}
+  });
+  function calculateRow(r){
+		var o = "rowop_"+r;
+		var i = "rowip_"+r;
+		var baserate = Number(document.getElementById("rd_"+r+"_"+6).innerText);
+		var scheme = document.getElementById("rd_"+r+"_"+7).innerText;
+		baserate = Number(baserate);
+		scheme = Number(scheme.slice(0,scheme.length-1))
+		var rowi= document.getElementById(i);
+		var val = (baserate - (baserate*scheme)/100)*rowi.value;
+		document.getElementById(o).value = val.toFixed(2);
+		calcTotal();
+	}
+	function calcTotal(){
+		var sum = Number(0);
+		for(var i = 1; i<document.getElementsByTagName("tr").length-2; i++){
+			sum = sum + Number(document.getElementById("rowop_"+i).value);
+		}
+		document.getElementById("twoGst").value = sum.toFixed(2);
+		document.getElementById("woGst").value = sum.toFixed(2);
+		document.getElementById("aGst").value = (Number(document.getElementById("woGst").value)*1.18).toFixed(2);
+		document.getElementById("taGst").value = document.getElementById("aGst").value;
+	}
+	function date(){
+		var currentDate = new Date()
+		var day = currentDate.getDate()
+		var month = currentDate.getMonth() + 1
+		var year = currentDate.getFullYear()
+		//console.log(day + "-" + month + "-" + year)
+	}
+	
+	//-------------------------------------------
+	
+	$("#btnExport").click(function(){
+      var $table = $("#orderForm");
+	  var fl = 0;
+	  if(document.getElementById("PartyName").value=="")
+	  {
+	  alert("Enter Party Name"); 
+	  fl = 1;
+	  }
+	  if(document.getElementById("Town").value=="" && fl==0){alert("Enter Town"); fl = 1;}
+	  if(fl == 0){ExportHTMLTableToExcel($table);}
+   });
+
+	function ExportHTMLTableToExcel($table) {
+		var tab_text = ""
+		var final_text = "";
+		var currentDate = new Date()
+		var day = currentDate.getDate()
+		var month = currentDate.getMonth() + 1
+		var year = currentDate.getFullYear()
+		currentDate = day + "-" + month + "-" + year
+		var filename = document.getElementById("PartyName").value +"_"+ document.getElementById("Town").value+"_"+currentDate;
+		//var filename = $table.attr('export-excel-filename'); // attribute to be 
+															 // applied on Table tag
+		filename = isNullOrUndefinedWithEmpty(filename)? "Excel Document" : filename;
+		var index = $table.find("tbody tr").length;
+		if (Number(index) > 0) {
+			$.each($table, function (index, item) {
+				var element = $(item);
+				var headertext = $("#" + element[0].id).closest
+								 (":has(label.HeaderLabel)").find('label').text().trim();
+				if (headertext == "") {
+					tab_text = "<table border='2px'><tr><td>Party Name</td><td colspan=4>"+document.getElementById('PartyName').value+"</td><td>Town</td><td colspan=2>"+document.getElementById('Town').value+"</td></tr><tr>";
+				}
+				else {
+					tab_text = "<table border='2px'><tr> " + headertext + "</tr><tr>";
+				}
+
+				// Create column header
+				element.find("thead tr th").each(function () {
+					if (!$(this).hasClass("NoExport"))
+						tab_text = tab_text + "<td bgcolor='#87AFC6'>" + 
+								   $(this)[0].innerHTML + "</td>";
+				});
+
+				//Close column header
+				tab_text = tab_text + "</tr>";
+
+				// Create body column
+				element.find(" tbody tr").each(function () {
+					tab_text = tab_text + "<tr>";
+					$(this).find("td").each(function () {
+						if ($(this).hasClass("ExportLabelTD"))
+						{
+							var value = $(this).html();
+							 tab_text = tab_text + "<th>" + value + "</th>";
+						}
+						else {
+							$(this).find("input,select").each(function () {
+								var value = "";
+
+								if ($(this).prop("type") == 'select-one') {
+									value = $('option:selected', this).text();
+								} else {
+									value = $(this).val();
+								}
+
+								if (!$(this).closest("td").hasClass("NoExport") && 
+									!$(this).hasClass("NoExport")) { // NoExport is used for TD 
+											// or tan input tag that not needs to be exported
+									tab_text = tab_text + "<th>" + value + "</th>";
+								}
+							});
+						}
+					});
+					tab_text = tab_text + "</tr>";
+				});
+
+				// Create colum footer
+				element.find("tfoot tr td").each(function () {
+					var colspan = $(this).attr("colspan");
+					var rowspan = $(this).attr("rowspan");
+					//console.log(colspan)
+					colspan = colspan == undefined ? 1 : colspan;
+					rowspan = rowspan == undefined ? 1 : rowspan;
+
+					if ($(this).hasClass("NoExport")) {
+						tab_text = tab_text + "";
+					}
+					else if ($(this).hasClass("ExportValueTD")) // Footer class that needs 
+														  // to be no td that have input tags
+					{
+						$(this).find("input,select").each(function () {
+							var value = "";
+
+							if ($(this).prop("type") == 'select-one') {
+								value = $('option:selected', this).text();
+							} else {
+								value = $(this).val();
+							}
+
+							if (!$(this).closest("td").hasClass("NoExport") && 
+								!$(this).hasClass("NoExport")) {
+								tab_text = tab_text + "<td colspan=" + colspan + " rowspan=" + rowspan + " >" + value + "</th></tr>";
+							}
+						});
+					}
+					else
+						tab_text = tab_text + "<tr><td colspan=" + colspan + " rowspan=" + rowspan + " >" + $(this).html() + "</td>";
+				});
+
+				tab_text = tab_text + "<tr></tr></table>";
+				console.log(tab_text);
+				if (index == 0) {
+					final_text = tab_text;
+				}
+				else {
+					final_text = final_text + tab_text;
+				}
+			});
+
+			var ua = window.navigator.userAgent;
+			var msie = ua.indexOf("MSIE ");
+
+			if (msie > 0 || !!navigator.userAgent.match
+						 (/Trident.*rv\:11\./))      // If Internet Explorer
+			{
+				//console.log("here");
+				txtArea1 = window.open();
+				txtArea1.document.open("txt/html", "replace");
+				txtArea1.document.write(final_text);
+				txtArea1.document.close();
+				txtArea1.focus();
+				sa = txtArea1.document.execCommand("SaveAs", true, filename+".xls");
+				return (sa);
+			}
+			else                 //other browser not tested on IE 11
+			{
+				//sa = window.open('data:application/vnd.ms-excel,' + 
+				//         encodeURIComponent(final_text));
+				var anchor = document.createElement('a');
+				//console.log(encodeURIComponent(final_text));
+				anchor.setAttribute('href', 'data:application/vnd.ms-excel,' + encodeURIComponent(final_text));
+				anchor.setAttribute('download', filename);
+				anchor.style.display = 'none';
+				document.body.appendChild(anchor);
+				anchor.click();
+				document.body.removeChild(anchor);
+			}
+		}
+	}
+
+	function isNullOrUndefinedWithEmpty(text){
+	   if(text==undefined)
+		  return true;
+	   else if(text == null)
+		  return true;
+	   else if(text == null)
+		  return true;
+	   else
+		  false;
+	}
+
+</script>
