@@ -23,8 +23,8 @@
 		</div>
 	</div>
 	<label for="twoGst">Amount(without GST)</label>
-	<input type="number" id = "twoGst" value=0 readonly>
-	<label for="taGst" style= "margin-left:10%">Amount(with GST)</label>
+	<input type="number" id = "twoGst" value=0 readonly><br>
+	<label for="taGst" >Amount(with GST)</label>
 	<input type="number" id = "taGst" value=0 readonly>
 
 	<div class="col-sm-10" style="margin:20px 0px 20px 0px;">
@@ -145,7 +145,10 @@
 	  fl = 1;
 	  }
 	  if(document.getElementById("Town").value=="" && fl==0){alert("Enter Town"); fl = 1;}
-	  if(fl == 0){ExportHTMLTableToExcel($table);}
+	  if(fl == 0){
+		alert('Amount without GST:'+document.getElementById("twoGst").value+'\nAmount with GST:'+document.getElementById("taGst").value)
+	  ExportHTMLTableToExcel($table);
+	  }
    });
 
 	function ExportHTMLTableToExcel($table) {
@@ -247,7 +250,7 @@
 				});
 
 				tab_text = tab_text + "<tr></tr></table>";
-				console.log(tab_text);
+				//console.log(tab_text);
 				if (index == 0) {
 					final_text = tab_text;
 				}
