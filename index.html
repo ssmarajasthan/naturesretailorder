@@ -5,13 +5,12 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/0.71/jquery.csv-0.71.min.js"></script>
-  <script src="js/jquery.base64.min.js"></script>
-  <title>Nature's Retail Order Form</title>
+  <title>SSMA|Nature's Retail Order Form</title>
   <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">  
 </head>
 <body>
   <div class="container">
-    <h4 style="margin-bottom:1vh">Nature's Essence <strong>Retail</strong> Order Form for <strong>SSMA</strong></h3>
+    <h4 style="margin-bottom:1vh"><strong>SSMA</strong> Order Form for Nature's Essence <strong>Retail</strong></h3>
 	<label for="PartyName" style="margin-top:1vh;margin-bottom:1vh">Party Name</label>
 	<input type="text" style="margin-top:1vh;margin-bottom:1vh" id = "PartyName" required>
 	<label for="Town" style= "margin-left:10%; margin-top:1vh;margin-bottom:1vh">Town</label>
@@ -22,9 +21,9 @@
 		<div class="row" id="csv-display" style="height:60vh;overflow: scroll;">
 		</div>
 	</div>
-	<label for="twoGst">Amount(without GST)</label>
+	<label for="twoGst">Amount(without GST) : </label>
 	<input type="number" id = "twoGst" value=0 readonly><br>
-	<label for="taGst" >Amount(with GST)</label>
+	<label for="taGst" >Amount(with GST)    : </label>
 	<input type="number" id = "taGst" value=0 readonly>
 
 	<div class="col-sm-10" style="margin:20px 0px 20px 0px;">
@@ -72,9 +71,15 @@
 				var idp = "rowip_"+rowindex;
 				var odp = "rowop_"+rowindex;
 				if(index==3){
+					var addFun = "";
+					if(colData.includes(':')){
+						//console.log(colData);
+						addFun = scheme(colData,rowindex);
+					}
 					html += '<td>';
-					html += '<input type="number" min="0" max="100000" id="'+idp+'" value="0" maxlength="6" oninput=" javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);calculateRow('+rowindex+')">';
+					html += '<input type="number" min="0" max="100000" id="'+idp+'" value="0" maxlength="6" oninput=" javascript: fslice(this);'+addFun+' calculateRow('+rowindex+');">';
 					html += '</td>';
+					
 				}
 				else if(index == 8){
 					html += '<td>';
@@ -82,7 +87,7 @@
 					html += '</td>';
 				}
 				else{
-					html += '<td id="rd_'+rowindex+'_'+index+'" class="ExportLabelTD">';
+					html += '<td id="rowfx_'+rowindex+'_'+index+'" class="ExportLabelTD" name='+colData.split(" ")[0]+'>';
 					html += colData;
 					html += '</td>';
 				}
@@ -104,11 +109,14 @@
 	  }
 	}
   });
+  function fslice(ob){
+	if (ob.value.length > ob.maxLength) ob.value = ob.value.slice(0, ob.maxLength);
+  }
   function calculateRow(r){
 		var o = "rowop_"+r;
 		var i = "rowip_"+r;
-		var baserate = Number(document.getElementById("rd_"+r+"_"+6).innerText);
-		var scheme = document.getElementById("rd_"+r+"_"+7).innerText;
+		var baserate = Number(document.getElementById("rowfx_"+r+"_"+6).innerText);
+		var scheme = document.getElementById("rowfx_"+r+"_"+7).innerText;
 		baserate = Number(baserate);
 		scheme = Number(scheme.slice(0,scheme.length-1))
 		var rowi= document.getElementById(i);
@@ -126,12 +134,35 @@
 		document.getElementById("aGst").value = (Number(document.getElementById("woGst").value)*1.18).toFixed(2);
 		document.getElementById("taGst").value = document.getElementById("aGst").value;
 	}
-	function date(){
-		var currentDate = new Date()
-		var day = currentDate.getDate()
-		var month = currentDate.getMonth() + 1
-		var year = currentDate.getFullYear()
-		//console.log(day + "-" + month + "-" + year)
+	//function calculateEffect(eff);
+	function scheme(sch, r){
+		var cd = sch.split(":");
+		var cause = cd[0];
+		var eff = cd[1];
+		var func;
+		var effText;
+		var neffText;
+		[effText, neffText] = calculateEffect(eff,r);
+		if(cause[0]=="q"){
+			var qval = Number(cause.substr(3,))				
+			switch (cause.substr(1,2)) {
+				case "gt":
+					func = 'Number(this.value)<='+qval+'?'+neffText+':'+effText+';'	
+					break;
+				case "ge":
+					func = 'Number(this.value)<'+qval+'?'+neffText+':'+effText+';'
+					//console.log(func);
+					break;
+			}
+		}
+		return func;
+	}
+	function calculateEffect(eff,r){
+		eff = eff.split("eq");
+		var schemeCol = "document.getElementById('rowfx_"+r+"_7')";
+		var neffText = schemeCol+".innerText = "+schemeCol+".getAttribute('name')";
+		var effText = schemeCol + ".innerText = '"+eff[1]+"'";
+		return [effText,neffText];
 	}
 	
 	//-------------------------------------------
@@ -146,8 +177,9 @@
 	  }
 	  if(document.getElementById("Town").value=="" && fl==0){alert("Enter Town"); fl = 1;}
 	  if(fl == 0){
-		alert('Amount without GST:'+document.getElementById("twoGst").value+'\nAmount with GST:'+document.getElementById("taGst").value)
+		alert('Amount without GST : Rs. '+document.getElementById("twoGst").value+'/-\nAmount with GST       : Rs. '+document.getElementById("taGst").value+'/-')
 	  ExportHTMLTableToExcel($table);
+	  document.write("<h1 >Order Form downloaded please forward it to SSMA.</h1><br><h3 style='color: rgb(255,0,0)'>Note: Invoice will be generated after payment confirmation</h3><script>setTimeout(function(){window.location.reload(true)},3000)</script> ");
 	  }
    });
 
