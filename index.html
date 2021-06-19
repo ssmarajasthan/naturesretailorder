@@ -179,7 +179,8 @@
 	  if(fl == 0){
 		alert('Amount without GST : Rs. '+document.getElementById("twoGst").value+'/-\nAmount with GST       : Rs. '+document.getElementById("taGst").value+'/-')
 	  ExportHTMLTableToExcel($table);
-	  document.write("<h1 >Order Form downloaded please forward it to SSMA.</h1><br><h3 style='color: rgb(255,0,0)'>Note: Invoice will be generated after payment confirmation</h3><script>setTimeout(function(){window.location.reload(true)},3000)</script> ");
+	  document.write("<h1>Order Form downloaded please forward it to SSMA.</h1><br><h3 style='color: rgb(255,0,0)'>Note: Invoice will be generated after payment confirmation</h3>");
+	  setTimeout(function(){window.location.reload(true)},3000);
 	  }
    });
 
