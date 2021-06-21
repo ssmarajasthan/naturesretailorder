@@ -30,6 +30,7 @@
 		<a class="btn btn-default read-more" style="background:#3399ff;color:white" id="btnExport">Submit Order</a>
 	</div>
   </div>
+  <div id="dynamicScript" style="display:none"></div>
 </body>
 </html>
 <script type="text/javascript">
@@ -37,7 +38,7 @@
 	var data;
 	$.ajax({
 	  type: "GET",  
-	  url: "Retail.csv",
+	  url: "Natures Retail.csv",
 	  dataType: "text",       
 	  success: function(response)  
 	  {
@@ -46,7 +47,7 @@
 	  }   
 	});
 	function generateHtmlTable(data) {
-		var html = '<table  class="table table-condensed table-hover table-striped" id="orderForm">';
+	  var html = '<table  class="table table-condensed table-hover table-striped" id="orderForm">';
 
       if(typeof(data[0]) === 'undefined') {
         return null;
@@ -72,12 +73,17 @@
 				var odp = "rowop_"+rowindex;
 				if(index==3){
 					var addFun = "";
-					if(colData.includes(':')){
+					if(colData.length>1){
 						//console.log(colData);
 						addFun = scheme(colData,rowindex);
 					}
 					html += '<td>';
-					html += '<input type="number" min="0" max="100000" id="'+idp+'" value="0" maxlength="6" oninput=" javascript: fslice(this);'+addFun+' calculateRow('+rowindex+');">';
+					if(addFun ==0){
+						html += '<input type="number" min="0" max="100000" id="'+idp+'" placeholder="0" maxlength="6" oninput=" javascript: fslice(this); calculateRow('+rowindex+');">';
+					}
+					else{
+						html += '<input type="number" min="0" max="100000" id="'+idp+'" placeholder="0" maxlength="6" oninput=" javascript: fslice(this);'+addFun+' calculateRow('+rowindex+');">';
+					}
 					html += '</td>';
 					
 				}
@@ -96,7 +102,7 @@
 		  }
 		});
 		html += '</tbody>';
-		html += '<tfoot style="width: 100%; display:none;">';
+		html += '<tfoot style="width: 100%; display:none;"><tr><td colspan="9" style="text-align:center"> </td></tr>';
 		html += '<tr>'
 		html += '<td colspan="8" style="text-align:center">Amount Without GST</td>';
 		html += '<td class="ExportValueTD"><input type="number" min="0" max="10000000" value="0" id="woGst"/></td></tr>'
@@ -126,7 +132,7 @@
 	}
 	function calcTotal(){
 		var sum = Number(0);
-		for(var i = 1; i<document.getElementsByTagName("tr").length-2; i++){
+		for(var i = 1; i<document.getElementsByTagName("tr").length-3; i++){
 			sum = sum + Number(document.getElementById("rowop_"+i).value);
 		}
 		document.getElementById("twoGst").value = sum.toFixed(2);
@@ -136,32 +142,45 @@
 	}
 	//function calculateEffect(eff);
 	function scheme(sch, r){
-		var cd = sch.split(":");
-		var cause = cd[0];
-		var eff = cd[1];
-		var func;
-		var effText;
-		var neffText;
-		[effText, neffText] = calculateEffect(eff,r);
-		if(cause[0]=="q"){
-			var qval = Number(cause.substr(3,))				
-			switch (cause.substr(1,2)) {
-				case "gt":
-					func = 'Number(this.value)<='+qval+'?'+neffText+':'+effText+';'	
-					break;
-				case "ge":
-					func = 'Number(this.value)<'+qval+'?'+neffText+':'+effText+';'
-					//console.log(func);
-					break;
-			}
+		var func = "";
+		if(sch.includes(":")){
+			var cd = sch.split(":");
+			var cause = cd[0];
+			var eff = cd[1];
+			var func;
+			var effText;
+			var neffText;
+			[effText, neffText] = calculateEffect(eff,r);
+			func = 'Number(this.value)<'+cause+'?'+neffText+':'+effText+';'
+			//console.log(func);
+		}
+		if(sch.includes("r")){
+			
+			copyrow = Number(sch.split("r")[1])-1;
+			var id = "rowip_"+copyrow;
+			func += "document.getElementById('"+id+"').value=this.value;"
+			//console.log(id);
+			
 		}
 		return func;
+		
+	}
+	function appendFun(copyrow){
+		var id = "rowip_"+copyrow;
+		var copytab = document.getElementById(id);
+		var g = copytab.getAttribute("oninput");
+		g += "copycat("+copyrow+","+(Number(copyrow)+1)+")";
+		copytab.setAttribute("oninput",g);
+	}
+	
+	function copycat(src,dest){
+		document.getElementById("rowip_"+dest).value = document.getElementById("rowip_"+src).value
+		//document.getElementById("rowip_"+dest).value = this.value;
 	}
 	function calculateEffect(eff,r){
-		eff = eff.split("eq");
 		var schemeCol = "document.getElementById('rowfx_"+r+"_7')";
 		var neffText = schemeCol+".innerText = "+schemeCol+".getAttribute('name')";
-		var effText = schemeCol + ".innerText = '"+eff[1]+"'";
+		var effText = schemeCol + ".innerText = '"+eff+"'";
 		return [effText,neffText];
 	}
 	
