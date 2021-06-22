@@ -84,7 +84,7 @@
 						html += '<input type="number" min="0" max="100000" id="'+idp+'" placeholder="0" maxlength="6" oninput=" javascript: fslice(this); calculateRow('+rowindex+');">';
 					}
 					else if(addFun == "readonly"){
-						console.log(rowindex);
+						alert(rowindex);
 						html += '<input type="number" min="0" max="100000" id="'+idp+'" placeholder="0" maxlength="6" oninput=" javascript: fslice(this); calculateRow('+rowindex+');" readonly>';
 					}
 					else{
@@ -167,7 +167,7 @@
 			}
 			else{
 				func = "readonly";
-				console.log(func);
+				alert(func);
 			}
 		}
 		return func;
