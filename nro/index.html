@@ -83,6 +83,9 @@
 					if(addFun ==0){
 						html += '<input type="number" min="0" max="100000" id="'+idp+'" placeholder="0" maxlength="6" oninput=" javascript: fslice(this); calculateRow('+rowindex+');">';
 					}
+					else if(addFun == "readonly"){
+						html += '<input type="number" min="0" max="100000" id="'+idp+'" placeholder="0" maxlength="6" oninput=" javascript: fslice(this); calculateRow('+rowindex+');" readonly>';
+					}
 					else{
 						html += '<input type="number" min="0" max="100000" id="'+idp+'" placeholder="0" maxlength="6" oninput=" javascript: fslice(this);'+addFun+' calculateRow('+rowindex+');">';
 					}
@@ -138,9 +141,9 @@
 			sum = sum + Number(document.getElementById("rowop_"+i).value);
 		}
 		document.getElementById("twoGst").value = sum.toFixed(2);
-		document.getElementById("woGst").value = sum.toFixed(2);
+		document.getElementById("woGst").value = sum;
 		document.getElementById("aGst").value = (Number(document.getElementById("woGst").value)*1.18).toFixed(2);
-		document.getElementById("taGst").value = document.getElementById("aGst").value.toFixed(2);
+		document.getElementById("taGst").value = document.getElementById("aGst").value;
 	}
 	function scheme(sch, r){
 		var func = "";
@@ -157,8 +160,13 @@
 		}
 		if(sch.includes("r")){
 			copyrow = Number(sch.split("r")[1])-1;
+			if(copyrow!=r){
 			var id = "rowip_"+copyrow;
-			func += "document.getElementById('"+id+"').value=this.value;"			
+			func += "document.getElementById('"+id+"').setAttribute('readonly',true);document.getElementById('"+id+"').value=this.value;"
+			}
+			else{
+				func = "readonly";
+			}
 		}
 		return func;
 		
@@ -209,7 +217,7 @@
 		var month = currentDate.getMonth() + 1
 		var year = currentDate.getFullYear()
 		currentDate = day + "-" + month + "-" + year
-		var filename = document.getElementById("PartyName").value +"_"+ document.getElementById("Town").value+"_"+currentDate;
+		var filename = document.getElementById("PartyName").value +"_"+ document.getElementById("Town").value+"_"+currentDate+".tf1";
 		//var filename = $table.attr('export-excel-filename'); // attribute to be 
 															 // applied on Table tag
 		filename = isNullOrUndefinedWithEmpty(filename)? "Excel Document" : filename;
@@ -339,7 +347,6 @@
 			}
 		}
 	}
-
 	function isNullOrUndefinedWithEmpty(text){
 	   if(text==undefined)
 		  return true;
