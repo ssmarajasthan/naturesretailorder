@@ -138,9 +138,9 @@
 			sum = sum + Number(document.getElementById("rowop_"+i).value);
 		}
 		document.getElementById("twoGst").value = sum.toFixed(2);
-		document.getElementById("woGst").value = sum;
+		document.getElementById("woGst").value = sum.toFixed(2);
 		document.getElementById("aGst").value = (Number(document.getElementById("woGst").value)*1.18).toFixed(2);
-		document.getElementById("taGst").value = document.getElementById("aGst").value;
+		document.getElementById("taGst").value = document.getElementById("aGst").value.toFixed(2);
 	}
 	function scheme(sch, r){
 		var func = "";
