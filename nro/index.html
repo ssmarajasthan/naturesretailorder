@@ -21,12 +21,13 @@
 		<div class="row" id="csv-display" style="height:60vh;overflow: scroll;">
 		</div>
 	</div>
+	<div class="col-sm-9" >
 	<label for="twoGst">Amount(without GST) : </label>
 	<input type="number" id = "twoGst" value=0 readonly><br>
-	<label for="taGst" >Amount(with GST)    : </label>
+	<label for="taGst" style="margin:1vh 0px 0px 0px;">Amount(with GST)    : </label>
 	<input type="number" id = "taGst" value=0 readonly>
-
-	<div class="col-sm-10" style="margin:20px 0px 20px 0px;">
+	</div>
+	<div class="col-sm-3" style="margin: 1vh 0px 0 0px; float:right">
 		<a class="btn btn-default read-more" style="background:#3399ff;color:white" id="btnExport">Submit Order</a>
 	</div>
   </div>
@@ -89,7 +90,7 @@
 				}
 				else if(index == 8){
 					html += '<td>';
-					html += '<input type="number" min="0" max="10000000" id="'+odp+'" value="0" readonly>';
+					html += '<input type="number" min="0" max="10000000" id="'+odp+'" value="0" disabled>';
 					html += '</td>';
 				}
 				else{
@@ -136,11 +137,10 @@
 			sum = sum + Number(document.getElementById("rowop_"+i).value);
 		}
 		document.getElementById("twoGst").value = sum.toFixed(2);
-		document.getElementById("woGst").value = sum.toFixed(2);
+		document.getElementById("woGst").value = sum;
 		document.getElementById("aGst").value = (Number(document.getElementById("woGst").value)*1.18).toFixed(2);
 		document.getElementById("taGst").value = document.getElementById("aGst").value;
 	}
-	//function calculateEffect(eff);
 	function scheme(sch, r){
 		var func = "";
 		if(sch.includes(":")){
@@ -155,12 +155,9 @@
 			//console.log(func);
 		}
 		if(sch.includes("r")){
-			
 			copyrow = Number(sch.split("r")[1])-1;
 			var id = "rowip_"+copyrow;
-			func += "document.getElementById('"+id+"').value=this.value;"
-			//console.log(id);
-			
+			func += "document.getElementById('"+id+"').value=this.value;"			
 		}
 		return func;
 		
